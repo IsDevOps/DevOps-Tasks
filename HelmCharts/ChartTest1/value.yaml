@@ -1,0 +1,4 @@
+# values.yaml
+server:
+  service:
+    type: LoadBalancer

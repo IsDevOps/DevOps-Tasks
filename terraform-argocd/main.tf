@@ -1,7 +1,5 @@
 # main.tf
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-}
+
 
 resource "kubernetes_namespace" "argocd" {
   metadata {
@@ -15,6 +13,6 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   namespace  = kubernetes_namespace.argocd.metadata[0].name
   values     = [
-    file("values.yaml")
+    file("/home/oseghale/Documents/DevOps-Tasks/HelmCharts/ChartTest1/value.yaml")
   ]
 }

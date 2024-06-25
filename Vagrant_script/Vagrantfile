@@ -1,0 +1,85 @@
+Vagrant.configure("2") do |config|
+  # Define VM for Rancher
+  config.vm.define "rancher" do |rancher|
+    rancher.vm.box = "ubuntu/bionic64"
+    rancher.vm.hostname = "rancher"
+    rancher.vm.network "private_network", ip: "192.168.56.10"
+    rancher.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+      vb.cpus = 2
+    end
+
+    rancher.vm.provision "shell", inline: <<-SHELL
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y docker.io
+
+      # Enable and start Docker
+      systemctl enable docker
+      systemctl start docker
+
+      # Add the vagrant user to the docker group
+      usermod -aG docker vagrant
+
+      # Run Rancher with the --privileged flag
+      docker run -d --restart=unless-stopped \
+        --privileged \
+        -p 80:80 -p 443:443 \
+        --name rancher \
+        -e CATTLE_LOGLEVEL=debug \
+        rancher/rancher:latest
+
+      sleep 60
+    SHELL
+  end
+
+
+   # Define VM for Minikube
+   config.vm.define "minikube" do |minikube|
+    minikube.vm.box = "ubuntu/bionic64"
+    minikube.vm.hostname = "minikube"
+    minikube.vm.network "private_network", ip: "192.168.56.11"
+    minikube.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+      vb.cpus = 2
+    end
+
+    minikube.vm.provision "shell", inline: <<-SHELL
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y docker.io apt-transport-https ca-certificates curl snapd
+
+      # Enable and start Docker
+      systemctl enable docker
+      systemctl start docker
+
+      # Add the vagrant user to the docker group
+      usermod -aG docker vagrant
+
+      # Install Minikube
+      curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+      chmod +x minikube
+      mv minikube /usr/local/bin/
+
+      # Enable and start snapd
+      systemctl enable snapd
+      systemctl start snapd
+      ln -s /var/lib/snapd/snap /snap
+
+      # Install kubectl with snap
+      snap install kubectl --classic
+
+      # Switch to vagrant user to start Minikube
+      su - vagrant -c '
+        minikube start --driver=docker
+        kubectl config use-context minikube
+      '
+
+      # Verify Minikube and Kubernetes setup
+      su - vagrant -c '
+        minikube status
+        kubectl get nodes
+      '
+    SHELL
+  end
+end

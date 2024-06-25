@@ -1,16 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app1
+  name: app2
+  namespace: argocd
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/your-repo/demo-dev.git'
+    repoURL: https://github.com/prometheus-community/helm-charts
     targetRevision: HEAD
-    path: applications/app1
+    path: charts/kube-prometheus-stack
   destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: default
+    server: https://kubernetes.default.svc
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true

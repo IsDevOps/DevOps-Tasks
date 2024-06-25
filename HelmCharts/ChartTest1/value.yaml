@@ -1,4 +1,6 @@
-# values.yaml
-server:
-  service:
-    type: LoadBalancer
+replicaCount: 1
+image:
+  repository: nginx
+  tag: stable
+service:
+  port: 80

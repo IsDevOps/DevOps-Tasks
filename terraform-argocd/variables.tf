@@ -1,7 +1,7 @@
 variable "argocd_namespace" {
   description = "Namespace where ArgoCD will be deployed"
   type        = string
-  default     = "argocd"
+  default     = "argocd_"
 }
 variable "rancher_api_token" {
   description = "Namespace where ArgoCD will be deployed"

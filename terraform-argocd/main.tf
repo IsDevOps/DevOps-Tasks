@@ -1,27 +1,30 @@
-resource "kubernetes_namespace" "argocd_namespace" {
+# main.tf
+resource "kubernetes_namespace" "argocd_" {
   metadata {
     name = "argocd"
   }
 }
 
-resource "helm_release" "argocd_namespace" {
-  name       = "argocd"
-  namespace  = kubernetes_namespace.argocd_namespace.metadata[0].name  # Accessing the name from metadata
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-
-  values = [
-    <<EOF
-    server:
-      service:
-        type: NodePort
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "128Mi"
-        limits:
-          cpu: "500m"
-          memory: "256Mi"
-    EOF
-  ]
+resource "kubernetes_manifest" "argocd_install" {
+  manifest = {
+    apiVersion = "batch/v1"
+    kind       = "Job"
+  
+    metadata ={
+      name      = "argocd-install"
+      namespace = kubernetes_namespace.argocd_.metadata[0].name
+    }
+    spec ={
+      template ={
+        spec ={
+          containers ={
+            name  = "argocd-installer"
+            image = "argoproj/argocd:v2.0.1"
+            command = ["sh", "-c", "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"]
+          }
+          restartPolicy = "Never"
+        }
+      }
+    }
+  }
 }
